@@ -9,13 +9,13 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
+```{r, ECHO = FALSE}
+library(tidyverse)
+library(srvyr)
+```
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r file download}
+```{r file download, ECHO = FALSE}
 pulse_data <- read_csv("data/pulse2022_puf_41.csv")
 pulse_weights <- read_csv("data/pulse2022_repwgt_puf_41.csv")
 pulse_join <- full_join(pulse_data, pulse_weights, by = "SCRAM")
@@ -30,8 +30,9 @@ svy_all <- pulse_join %>%
 
 ## Including Plots
 
+# Vaccination Plans in the United States 
 
-```{r vaccination plans, ECHO = true}
+```{r vaccination plans, ECHO = TRUE}
 svy_all %>%
   filter(GETVACRV != -99 & GETVACRV != -88) %>%
   mutate(VaccinationPlan = case_when(GETVACRV == 1 ~ "Definitely get a vaccine",
@@ -41,20 +42,27 @@ svy_all %>%
                                      GETVACRV == 5 ~ "Definitely NOT get a vaccine")) %>%
   group_by(VaccinationPlan) %>%
   summarize(prop_respondents = survey_prop()) %>%
-  mutate(percentage_respondents = scales::percent(prop_respondents)) %>%
-  ggplot(aes(x = "", y = percentage_respondents, fill = VaccinationPlan)) +
+  ggplot(aes(x = "", y = prop_respondents, fill = VaccinationPlan)) +
   geom_bar(width = 1,  stat = "identity", color = "white") +
   coord_polar("y", start = 0) +
-  geom_text(aes(label = percentage_respondents), 
+  geom_text(aes(label =  paste0(round(100 * prop_respondents, 0), "%")), 
             position = position_stack(vjust = 0.5), size = 3) +
   theme_void() +
   scale_fill_brewer(palette = "Blues") +
   labs(title = "Vaccination Plans", subtitle = "United States", caption = 
          "Source: U.S. Census Bureau, Household Pulse Survey Week 41 of 2022") +
-  guides(fill=guide_legend(title="Vaccination Plans")) 
+  guides(fill=guide_legend(title="Vaccination Plans"))
 ```
 
+### Interpretation
 
+Over 200 million Americans have been vaccinated since the FDA authorized the 
+first Covid-19 vaccines. While these vaccines are highly effective at preventing
+hospitalization and death, vaccine hesitancy in the United States remains high.
+Data from the latest Household Pulse Survey finds that approximately 48% of 
+unvaccinated Americans do not plan to get vaccinated. Less than 7% of
+unvaccinated Americans plan to get vaccinated, creating new public health
+challenges as we enter the third year of the pandemic. 
 
 ```{r vaccine doses by region, ECHO = TRUE}
 svy_all %>%
