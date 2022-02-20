@@ -28,9 +28,8 @@ svy_all <- pulse_join %>%
   )
 ```
 
-## Including Plots
 
-# Vaccination Plans in the United States 
+## Vaccination Plans in the United States 
 
 ```{r vaccination plans, ECHO = TRUE}
 svy_all %>%
@@ -64,6 +63,8 @@ unvaccinated Americans do not plan to get vaccinated. Less than 7% of
 unvaccinated Americans plan to get vaccinated, creating new public health
 challenges as we enter the third year of the pandemic. 
 
+## Vaccine Doses by Region
+
 ```{r vaccine doses by region, ECHO = TRUE}
 svy_all %>%
   filter(NUMDOSES != -99 & NUMDOSES != -88) %>%
@@ -86,3 +87,13 @@ svy_all %>%
          "Region") +
   guides(fill=guide_legend(title="Number of Doses")) 
 ```
+
+### Interpretation
+
+While vaccine hesitancy continues to be a problem, millions of Americans have
+received one or more Covid-19 vaccine doses across all four regions. Over 50%
+of Americans in the Midwest, Northeast and West have received three Covid-19 
+vaccine doses; 47% of Americans in the South have received three doses. Less
+than 1% of the population has received four or more vaccine doses. Overall,
+the latest household pulse data does not show significant regional differences 
+in the number of doses. 
