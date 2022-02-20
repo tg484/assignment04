@@ -31,8 +31,27 @@ svy_all <- pulse_join %>%
 ## Including Plots
 
 
-```{r vaccination plans}
-plot(pressure)
+```{r vaccination plans, ECHO = true}
+svy_all %>%
+  filter(GETVACRV != -99 & GETVACRV != -88) %>%
+  mutate(VaccinationPlan = case_when(GETVACRV == 1 ~ "Definitely get a vaccine",
+                                     GETVACRV == 2 ~ "Probably get a vaccine",
+                                     GETVACRV == 3 ~ "Be unsure about getting a vaccine",
+                                     GETVACRV == 4 ~ "Probably NOT get a vaccine",
+                                     GETVACRV == 5 ~ "Definitely NOT get a vaccine")) %>%
+  group_by(VaccinationPlan) %>%
+  summarize(prop_respondents = survey_prop()) %>%
+  mutate(percentage_respondents = scales::percent(prop_respondents)) %>%
+  ggplot(aes(x = "", y = percentage_respondents, fill = VaccinationPlan)) +
+  geom_bar(width = 1,  stat = "identity", color = "white") +
+  coord_polar("y", start = 0) +
+  geom_text(aes(label = percentage_respondents), 
+            position = position_stack(vjust = 0.5), size = 3) +
+  theme_void() +
+  scale_fill_brewer(palette = "Blues") +
+  labs(title = "Vaccination Plans", subtitle = "United States", caption = 
+         "Source: U.S. Census Bureau, Household Pulse Survey Week 41 of 2022") +
+  guides(fill=guide_legend(title="Vaccination Plans")) 
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
