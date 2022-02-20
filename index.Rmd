@@ -1,6 +1,6 @@
 ---
 title: "index"
-author: "Tanya Grover"
+author: "Payal Soneja and Tanya Grover"
 date: "2/17/2022"
 output: html_document
 ---
@@ -15,15 +15,23 @@ This is an R Markdown document. Markdown is a simple formatting syntax for autho
 
 When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
 
-```{r cars}
-summary(cars)
+```{r file download}
+pulse_data <- read_csv("data/pulse2022_puf_41.csv")
+pulse_weights <- read_csv("data/pulse2022_repwgt_puf_41.csv")
+pulse_join <- full_join(pulse_data, pulse_weights, by = "SCRAM")
+svy_all <- pulse_join %>%
+  as_survey_rep(
+    repweights = dplyr::matches("PWEIGHT[0-9]+"),
+    weights = PWEIGHT,
+    type = "BRR",
+    mse = TRUE
+  )
 ```
 
 ## Including Plots
 
-You can also embed plots, for example:
 
-```{r pressure, echo=FALSE}
+```{r vaccination plans}
 plot(pressure)
 ```
 
