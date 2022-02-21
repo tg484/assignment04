@@ -9,4 +9,3 @@ data/*.RData
 #Ignore . directory
 .*
 !.gitignore
-.Rproj.user
