@@ -47,7 +47,7 @@ library(urbnthemes)
 ## Data Description
 
 We use a publicly available dataset that comes from the 41st week of the Census Bureau’s new Household Pulse Survey (HPS). The survey is meant to rapidly capture the effects of COVID-19 pandemic on Americans’ income, employment, food and housing security, disruptions to education, physical and mental well-being, and health insurance and access to care. The survey was conducted between December 29, 2021 – January 10, 2022.
-(Source:[Census Bureau’s Household Pulse Survey] (https://www.census.gov/programs-surveys/household-pulse-survey/datasets.html#phase3.3))
+(Source:[Census Bureau’s Household Pulse Survey](https://www.census.gov/programs-surveys/household-pulse-survey/datasets.html#phase3.3))
 
 ## Data Extraction
 
@@ -142,7 +142,7 @@ expns_dif_hhsize_svy %>%
 
 <br/>
 
-#### Data Visualization #1: Difficulty paying usual household expenses in the last 7 days by Household Size
+### Data Visualization #1: Difficulty paying usual household expenses in the last 7 days by Household Size
 
 ```{r}
 # calculate proportion of respondents for expns_dif by hhsize, and plot the visualization.
@@ -170,3 +170,7 @@ expns_dif_hhsize_svy %>%
   theme_urbn_print() +
   theme(legend.position = "bottom")
 ```
+
+### Interpretation
+
+Nearly 78 million adults – about 1 in 3 – are having trouble paying for usual household expenses, according to the Census data. The latest Household Pulse Survey provides data on the number of adults struggling to cover usual household expenses such as food, rent or mortgage, car payments, medical expenses. The data from Week #41 finds that approximately 19 percent of the respondents with a household size of 6 or more found it very difficult to pay the usual household expenses in the last week, which is consistent with the fact that a big family size leads to more expenses in the family. The data also reveals that approximately 50 percent of respondents with a household size of 2 did not find it as difficult to pay household expenses in the last week as the larger family size households. Similar is the case with single-person household (~44 percent). These findings show how the economic impacts of the COVID-19 pandemic have still been incredibly broad across the household sizes in the US economy.
