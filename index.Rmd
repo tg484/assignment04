@@ -39,8 +39,8 @@ library(srvyr)
 library(tidyverse)
 library(janitor)
 library(ggplot2)
-library(maps)
-library(tidycensus) # to read
+library(maps) # to get US states lat and long coordinates
+library(tidycensus) # to get fips codes of US states
 library(urbnthemes)
 ```
 
@@ -174,3 +174,61 @@ expns_dif_hhsize_svy %>%
 ### Interpretation
 
 Nearly 78 million adults – about 1 in 3 – are having trouble paying for usual household expenses, according to the Census data. The latest Household Pulse Survey provides data on the number of adults struggling to cover usual household expenses such as food, rent or mortgage, car payments, medical expenses. The data from Week #41 finds that approximately 19 percent of the respondents with a household size of 6 or more found it very difficult to pay the usual household expenses in the last week, which is consistent with the fact that a big family size leads to more expenses in the family. The data also reveals that approximately 50 percent of respondents with a household size of 2 did not find it as difficult to pay household expenses in the last week as the larger family size households. Similar is the case with single-person household (~44 percent). These findings show how the economic impacts of the COVID-19 pandemic have still been incredibly broad across the household sizes in the US economy.
+
+<br/>
+
+Next, we wanted to explore how homeownership looks across US States. We create an indicator variable called 'ownership' and assign value 1 to the houses that are either owned free and clear or with a mortgage or loan, and assign value 0 to the houses that are not owned. We also exclude the missing values from the data.
+```{r, results = "hide"}
+# check for missing values in the data
+pulse41_svy %>%
+  survey_count(is.na(tenure), is.na(est_st)) # no missing values
+
+# create a separate data set 'house_ownership' to calculate the proportion of 
+# households/respondents that owned a house or an apartment.
+# remove -99 values (Question seen but category not selected).
+house_ownership_svy <- pulse41_svy %>%
+  select(tenure, est_st) %>%
+  filter(tenure != -99) %>%
+  mutate(ownership = if_else(tenure == 1 | tenure == 2, 1, 0)) %>%
+  group_by(est_st, ownership) %>%
+  summarize(percent_respondents = survey_prop()) %>%
+  filter(ownership == 1) 
+```
+
+We load external libraries to get the US states longitude and latitude and fips codes.
+```{r}
+us_states <- map_data("state")
+state_fips <- as.data.frame(fips_codes)
+state_labels <- as.data.frame(state.center)
+state_labels$abb <- state.abb
+
+state_fips <- state_fips %>%
+  mutate(state_name = tolower(state_name)) %>%
+  distinct(state_code, state_name)
+
+# merge us_states with state.fips to get fips column
+us_states <- us_states %>%
+  left_join(state_fips, select(state_fips), by = c("region" = "state_name")) 
+
+# merge house_ownership_svy and us_states
+house_ownership_svy_map <- house_ownership_svy %>%
+  left_join(us_states, by = c("est_st" = "state_code"))
+```
+
+<br/>
+
+### Data Visualization #2: Homeownership by State
+
+```{r}
+house_ownership_svy_map %>%
+  ggplot(aes(x = long, y = lat, group = group, fill = percent_respondents)) +
+  geom_polygon(color = "gray90", size = 0.1) +
+  geom_text(size = 2.3, data = state_labels, aes(x = x, y = y, label = abb), inherit.aes = FALSE) +
+  scale_fill_gradientn(breaks=c(0.3, 0.4, 0.5, 0.6), labels = c("30%", "40%", "50%", "60%"), colors = c("#fff2cf", "#fdd870","#fdbf11","#ca5800"),
+                       guide = guide_colorbar(title.position = "top")) +
+  labs(title = "Figure 2: Homeownership by State", 
+         subtitle = "Percentage of Respondents that own a house by State",
+         caption = "Source: U.S Census Bureau, Household Pulse Survey Week 41 of 2022",
+       fill = "Percent of Respondents") +
+  theme_urbn_map()
+```
