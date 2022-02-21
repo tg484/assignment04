@@ -57,11 +57,11 @@ base_url <- "https://www2.census.gov/programs-surveys/demo/datasets/hhp/"
 week41_url <- "2022/wk41/HPS_Week41_PUF_CSV.zip"
 pulse_url <- paste0(base_url, week41_url)
 
-download.file(
-  pulse_url,
-  destfile = "data/pulse41.zip",
-  mode = "wb"
-)
+#download.file(
+  #pulse_url,
+  #destfile = "data/pulse41.zip",
+  #mode = "wb"
+#)
 
 unzip(
   zipfile = "data/pulse41.zip",
@@ -219,7 +219,7 @@ house_ownership_svy_map <- house_ownership_svy %>%
 
 ### Data Visualization #2: Homeownership by State
 
-```{r}
+```{r, fig.height = 4}
 house_ownership_svy_map %>%
   ggplot(aes(x = long, y = lat, group = group, fill = percent_respondents)) +
   geom_polygon(color = "gray90", size = 0.1) +
@@ -227,8 +227,12 @@ house_ownership_svy_map %>%
   scale_fill_gradientn(breaks=c(0.3, 0.4, 0.5, 0.6), labels = c("30%", "40%", "50%", "60%"), colors = c("#fff2cf", "#fdd870","#fdbf11","#ca5800"),
                        guide = guide_colorbar(title.position = "top")) +
   labs(title = "Figure 2: Homeownership by State", 
-         subtitle = "Percentage of Respondents that own a house by State",
+         subtitle = "Percentage of Respondents that own a house",
          caption = "Source: U.S Census Bureau, Household Pulse Survey Week 41 of 2022",
        fill = "Percent of Respondents") +
   theme_urbn_map()
 ```
+
+### Interpretation
+
+Homeownership rates, or the percentage of homes occupied by their owners, ranged from approximately 33 percent in the District of Columbia, followed by 47 percent in New York to 67 percent in Minnesota. All in all, homeownership was lower in more urbanized and denser states (California, New York, Florida), as people living in cities are more likely to rent their homes. Another reason that these states have lower homeownership rates could be due to the rising housing prices and higher mortgage rates in these states.  
