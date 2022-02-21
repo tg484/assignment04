@@ -1,30 +1,104 @@
 ---
-title: "index"
-author: "Tanya Grover"
-date: "2/17/2022"
-output: html_document
+title: "Data Science for Public Policy - Assignment 04"
+author: "Payal Soneja and Tanya Grover"
+output:
+  html_document: 
+    df_print: paged
+  pdf_document: 
+urlcolor: blue
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(message = FALSE)
+knitr::opts_chunk$set(warning = FALSE)
 ```
 
-## R Markdown
+```{r include = FALSE}
+def.chunk.hook  <- knitr::knit_hooks$get("chunk")
+knitr::knit_hooks$set(chunk = function(x, options) {
+  x <- def.chunk.hook(x, options)
+  ifelse(options$size != "normalsize", paste0("\n \\", options$size,"\n\n", x, "\n\n \\normalsize"), x)
+})
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
 ```
 
-## Including Plots
+\begin{center}
+\Huge{PPOL 670 | Assignment 4}
 
-You can also embed plots, for example:
+\Huge{Data Visualization, Markdown, and Git}
+\end{center}
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+\vspace{0.1in}
+
+```{r}
+#install the following packages and load the libraries
+
+#install.packages("remotes")
+#remotes::install_github("UrbanInstitute/urbnthemes", build_vignettes = TRUE)
+library(srvyr)
+library(tidyverse)
+library(janitor)
+library(ggplot2)
+library(maps)
+library(tidycensus) # to read
+library(urbnthemes)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+## Data Description
+
+We use a publicly available dataset that comes from the 41st week of the Census Bureau’s new Household Pulse Survey (HPS). The survey is meant to rapidly capture the effects of COVID-19 pandemic on Americans’ income, employment, food and housing security, disruptions to education, physical and mental well-being, and health insurance and access to care. The survey was conducted between December 29, 2021 – January 10, 2022.
+(Source:[Census Bureau’s Household Pulse Survey] (https://www.census.gov/programs-surveys/household-pulse-survey/datasets.html#phase3.3))
+
+## Data Extraction
+
+```{r}
+# Extracting the zip folder and unzipping it
+base_url <- "https://www2.census.gov/programs-surveys/demo/datasets/hhp/"
+week41_url <- "2022/wk41/HPS_Week41_PUF_CSV.zip"
+pulse_url <- paste0(base_url, week41_url)
+
+download.file(
+  pulse_url,
+  destfile = "data/pulse41.zip",
+  mode = "wb"
+)
+
+unzip(
+  zipfile = "data/pulse41.zip",
+  exdir = "data"
+)
+```
+
+```{r}
+# Reading mail csv file
+pulse41 <- read_csv("data/pulse2022_puf_41.csv") %>%
+  janitor::clean_names() # variable names in lowercase
+
+# Reading replication weight csv file
+pulse41_repwgt <- read_csv("data/pulse2022_repwgt_puf_41.csv") %>%
+  janitor::clean_names()
+
+# Merging both csv files on 'scam' variable
+pulse41_joined <- pulse41 %>%
+  left_join(pulse41_repwgt, by = "scram")
+  
+```
+
+```{r}
+# Passing the merged data to as_survey_rep
+pulse41_svy <- pulse41_joined %>%
+  as_survey_rep(
+    repweights = 
+      dplyr::matches("pweight[0-9]+"),
+    weights = pweight,
+    type = "BRR",
+    mse = TRUE
+  )
+  
+```
+
+```{r}
+# Checking class of both data types
+class(pulse41)  # data.frame
+class(pulse41_svy) #svyrep.design
+```

@@ -1,0 +1,11 @@
+#Ignore csv files
+data/*.csv
+#Ignore zip files
+data/*.zip
+#Ignore excel files
+data/*.xlsx
+#Ignore RData files
+data/*.RData
+#Ignore Rproj directory
+.*
+!.gitignore
