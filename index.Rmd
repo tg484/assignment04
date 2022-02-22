@@ -1,30 +1,238 @@
 ---
-title: "index"
-author: "Tanya Grover"
-date: "2/17/2022"
-output: html_document
+title: "Data Science for Public Policy - Assignment 04"
+author: "Payal Soneja and Tanya Grover"
+output:
+  html_document: 
+    df_print: paged
+  pdf_document: 
+urlcolor: blue
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(message = FALSE)
+knitr::opts_chunk$set(warning = FALSE)
 ```
 
-## R Markdown
+```{r include = FALSE}
+def.chunk.hook  <- knitr::knit_hooks$get("chunk")
+knitr::knit_hooks$set(chunk = function(x, options) {
+  x <- def.chunk.hook(x, options)
+  ifelse(options$size != "normalsize", paste0("\n \\", options$size,"\n\n", x, "\n\n \\normalsize"), x)
+})
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
 ```
 
-## Including Plots
+\begin{center}
+\Huge{PPOL 670 | Assignment 4}
 
-You can also embed plots, for example:
+\Huge{Data Visualization, Markdown, and Git}
+\end{center}
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+\vspace{0.1in}
+
+```{r}
+#install the following packages and load the libraries
+
+#install.packages("remotes")
+#remotes::install_github("UrbanInstitute/urbnthemes", build_vignettes = TRUE)
+library(srvyr)
+library(tidyverse)
+library(janitor)
+library(ggplot2)
+library(maps) # to get US states lat and long coordinates
+library(tidycensus) # to get fips codes of US states
+library(urbnthemes)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+## Data Description
+
+We use a publicly available dataset that comes from the 41st week of the Census Bureau’s new Household Pulse Survey (HPS). The survey is meant to rapidly capture the effects of COVID-19 pandemic on Americans’ income, employment, food and housing security, disruptions to education, physical and mental well-being, and health insurance and access to care. The survey was conducted between December 29, 2021 – January 10, 2022.
+(Source:[Census Bureau’s Household Pulse Survey](https://www.census.gov/programs-surveys/household-pulse-survey/datasets.html#phase3.3))
+
+## Data Extraction
+
+```{r}
+# Extract the zip folder and unzipping it
+base_url <- "https://www2.census.gov/programs-surveys/demo/datasets/hhp/"
+week41_url <- "2022/wk41/HPS_Week41_PUF_CSV.zip"
+pulse_url <- paste0(base_url, week41_url)
+
+download.file(
+  pulse_url,
+  destfile = "data/pulse41.zip",
+  mode = "wb"
+)
+
+unzip(
+  zipfile = "data/pulse41.zip",
+  exdir = "data"
+)
+```
+
+```{r}
+# Read mail csv file
+pulse41 <- read_csv("data/pulse2022_puf_41.csv") %>%
+  janitor::clean_names() # variable names in lowercase
+
+# Read replication weight csv file
+pulse41_repwgt <- read_csv("data/pulse2022_repwgt_puf_41.csv") %>%
+  janitor::clean_names()
+
+# Merge both csv files on 'scam' variable
+pulse41_joined <- pulse41 %>%
+  left_join(pulse41_repwgt, by = "scram")
+  
+```
+
+```{r}
+# Pass the merged data to as_survey_rep
+pulse41_svy <- pulse41_joined %>%
+  as_survey_rep(
+    repweights = 
+      dplyr::matches("pweight[0-9]+"),
+    weights = pweight,
+    type = "BRR",
+    mse = TRUE
+  )
+  
+```
+
+```{r}
+# Check the class of both data types
+class(pulse41)  # data.frame
+class(pulse41_svy) #svyrep.design
+```
+
+## Data Preparation for Visualizations
+
+```{r, results = "hide"}
+# Create a new data set from pulse41_svy survey object and 
+# remove -99 values (Question seen but category not selected).
+expns_dif_hhsize_svy <- pulse41_svy %>%
+  select(expns_dif, thhld_numper) %>%
+  filter(expns_dif != -99)
+
+# check for missing values in the data
+map_dbl(.x = pulse41, .f = ~sum(is.na(.x))) # no missing values
+```
+
+To create this visualization, we first create the following buckets for household size:
+
++ 1: singles
++ 2: couples or 2 person households
++ 3-5: these could include small families
++ 6 and more: these could include large family households
+
+Next, we check the survey counts corresponding to each bucket to ensure we have a good distribution. Table below displays the counts.
+```{r}
+# create a count of respondents by household size
+expns_dif_hhsize_svy %>% 
+  mutate(
+    household_size = case_when(
+    thhld_numper == 1 ~ "1",
+    thhld_numper == 2 ~ "2",
+    thhld_numper > 2 & thhld_numper <= 5 ~ "3-5",
+    thhld_numper >= 6 & thhld_numper <= 10 ~ "6 and more"
+  )
+  ) %>%
+  group_by(household_size) %>%
+  survey_count(name = "respondents_count") %>%
+  ungroup()
+```
+
+<br/>
+
+### Data Visualization #1: Difficulty paying usual household expenses in the last 7 days by Household Size
+
+```{r}
+# calculate proportion of respondents for expns_dif by hhsize, and plot the visualization.
+expns_dif_hhsize_svy %>%
+  mutate(
+    household_size = case_when(
+    thhld_numper == 1 ~ "1",
+    thhld_numper == 2 ~ "2",
+    thhld_numper > 2 & thhld_numper <= 5 ~ "3-5",
+    thhld_numper >= 6 & thhld_numper <= 10 ~ "6 and more"
+  )
+  ) %>%
+  group_by(household_size, expns_dif) %>%
+  summarize(percent_respondents = survey_prop()) %>%
+  ggplot(aes(x = household_size, y = percent_respondents, fill = as.factor(expns_dif), label =
+               paste0(round(100 * percent_respondents, 0), "%"))) +
+  geom_bar(position = 'stack', stat = "identity", width = 0.7) +
+  geom_text(size = 2.6, color = "white",position = position_stack(vjust = 0.5)) +
+    labs(title = "Figure 1 ", 
+         subtitle = "Difficulty Paying Household Expenses in the Last 7 Days by Houshehold Size",
+         caption = "Source: U.S Census Bureau, Household Pulse Survey Week 41 of 2022", 
+         y = "Percent Respondents", x = "Household Size") +
+  scale_y_continuous(labels = scales::percent) +
+  scale_fill_manual(labels = c("Did not report", "Not at all difficult", "A little difficult", "Somewhat difficult", "Very Difficult"), values = c("#cfe8f3", "#73bfe2", "#1696d2", "#0a4c6a", "#000000")) +
+  theme_urbn_print() +
+  theme(legend.position = "bottom")
+```
+
+### Interpretation
+
+Nearly 78 million adults – about 1 in 3 – are having trouble paying for usual household expenses, according to the Census data. The latest Household Pulse Survey provides data on the number of adults struggling to cover usual household expenses such as food, rent or mortgage, car payments, medical expenses. The data from Week #41 finds that approximately 19 percent of the respondents with a household size of 6 or more found it very difficult to pay the usual household expenses in the last week, which is consistent with the fact that a big family size leads to more expenses in the family. The data also reveals that approximately 50 percent of respondents with a household size of 2 did not find it as difficult to pay household expenses in the last week as the larger family size households. Similar is the case with single-person household (~44 percent). These findings show how the economic impacts of the COVID-19 pandemic have still been incredibly broad across the household sizes in the US economy.
+
+<br/>
+
+Next, we wanted to explore how homeownership looks across US States. We create an indicator variable called 'ownership' and assign value 1 to the houses that are either owned free and clear or with a mortgage or loan, and assign value 0 to the houses that are not owned. We also exclude the missing values from the data.
+```{r, results = "hide"}
+# check for missing values in the data
+pulse41_svy %>%
+  survey_count(is.na(tenure), is.na(est_st)) # no missing values
+
+# create a separate data set 'house_ownership' to calculate the proportion of 
+# households/respondents that owned a house or an apartment.
+# remove -99 values (Question seen but category not selected).
+house_ownership_svy <- pulse41_svy %>%
+  select(tenure, est_st) %>%
+  filter(tenure != -99) %>%
+  mutate(ownership = if_else(tenure == 1 | tenure == 2, 1, 0)) %>%
+  group_by(est_st, ownership) %>%
+  summarize(percent_respondents = survey_prop()) %>%
+  filter(ownership == 1) 
+```
+
+We load external libraries to get the US states longitude and latitude and fips codes.
+```{r}
+us_states <- map_data("state")
+state_fips <- as.data.frame(fips_codes)
+state_labels <- as.data.frame(state.center)
+state_labels$abb <- state.abb
+
+state_fips <- state_fips %>%
+  mutate(state_name = tolower(state_name)) %>%
+  distinct(state_code, state_name)
+
+# merge us_states with state.fips to get fips column
+us_states <- us_states %>%
+  left_join(state_fips, select(state_fips), by = c("region" = "state_name")) 
+
+# merge house_ownership_svy and us_states
+house_ownership_svy_map <- house_ownership_svy %>%
+  left_join(us_states, by = c("est_st" = "state_code"))
+```
+
+<br/>
+
+### Data Visualization #2: Homeownership by State
+
+```{r, fig.height = 4}
+house_ownership_svy_map %>%
+  ggplot(aes(x = long, y = lat, group = group, fill = percent_respondents)) +
+  geom_polygon(color = "gray90", size = 0.1) +
+  geom_text(size = 2.3, data = state_labels, aes(x = x, y = y, label = abb), inherit.aes = FALSE) +
+  scale_fill_gradientn(breaks=c(0.3, 0.4, 0.5, 0.6), labels = c("30%", "40%", "50%", "60%"), colors = c("#fff2cf", "#fdd870","#fdbf11","#ca5800"),
+                       guide = guide_colorbar(title.position = "top")) +
+  labs(title = "Figure 2: Homeownership by State", 
+         subtitle = "Percentage of Respondents that own a house",
+         caption = "Source: U.S Census Bureau, Household Pulse Survey Week 41 of 2022",
+       fill = "Percent of Respondents") +
+  theme_urbn_map()
+```
+
+### Interpretation
+
+Homeownership rates, or the percentage of homes occupied by their owners, ranged from approximately 33 percent in the District of Columbia, followed by 47 percent in New York to 67 percent in Minnesota. All in all, homeownership was lower in more urbanized and denser states (California, New York, Florida), as people living in cities are more likely to rent their homes. Another reason that these states have lower homeownership rates could be due to the rising housing prices and higher mortgage rates in these states.  
