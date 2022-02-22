@@ -1,7 +1,7 @@
 ---
 title: "Data Science for Public Policy - Assignment 04"
 author: "Payal Soneja and Tanya Grover"
-date: "2/17/2022"
+date: "2/25/2022"
 output:
   html_document: 
     df_print: paged
@@ -157,7 +157,7 @@ expns_dif_hhsize_svy %>%
                paste0(round(100 * percent_respondents, 0), "%"))) +
   geom_bar(position = 'stack', stat = "identity", width = 0.7) +
   geom_text(size = 2.6, color = "white",position = position_stack(vjust = 0.5)) +
-    labs(title = "Figure 1 ", 
+    labs(title = "Figure 1", 
          subtitle = "Difficulty Paying Household Expenses in the Last 7 Days by Houshehold Size",
          caption = "Source: U.S Census Bureau, Household Pulse Survey Week 41 of 2022", 
          y = "Percent Respondents", x = "Household Size") +
@@ -254,7 +254,7 @@ pulse41_svy %>%
             position = position_stack(vjust = 0.5), size = 3) +
   theme_void() +
   scale_fill_brewer(palette = "Blues") +
-  labs(title = "Vaccination Plans", subtitle = "United States", caption = 
+  labs(title = "Figure 3: Vaccination Plans", subtitle = "United States", caption = 
          "Source: U.S. Census Bureau, Household Pulse Survey Week 41 of 2022") +
   guides(fill=guide_legend(title="Vaccination Plans"))
 ```
@@ -269,7 +269,9 @@ unvaccinated Americans do not plan to get vaccinated. Less than 7% of
 unvaccinated Americans plan to get vaccinated, creating new public health
 challenges as we enter the third year of the pandemic. 
 
-## Vaccine Doses by Region
+<br/>
+
+### Data Visualization #4: Vaccine Doses by Region
 
 ```{r vaccine doses by region, ECHO = TRUE}
 pulse41_svy %>%
@@ -288,7 +290,7 @@ pulse41_svy %>%
   scale_y_continuous(labels=scales::percent) +
   scale_fill_brewer(palette = "Blues") +
   theme_minimal() +
-  labs(title = "Total Vaccine Doses", subtitle = "Data by Region",caption = 
+  labs(title = "Figure 4: Total Vaccine Doses", subtitle = "Data by Region",caption = 
          "Source: U.S. Census Bureau, Household Pulse Survey Week 41 of 2022", y = "Percentage of Respondents", x =
          "Region") +
   guides(fill=guide_legend(title="Number of Doses")) 
