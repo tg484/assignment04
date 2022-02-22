@@ -1,4 +1,8 @@
 ---
+title: "index"
+author: "Payal Soneja and Tanya Grover"
+date: "2/17/2022"
+output: html_document
 title: "Data Science for Public Policy - Assignment 04"
 author: "Payal Soneja and Tanya Grover"
 output:
@@ -12,16 +16,13 @@ urlcolor: blue
 knitr::opts_chunk$set(message = FALSE)
 knitr::opts_chunk$set(warning = FALSE)
 ```
-
 ```{r include = FALSE}
 def.chunk.hook  <- knitr::knit_hooks$get("chunk")
 knitr::knit_hooks$set(chunk = function(x, options) {
   x <- def.chunk.hook(x, options)
   ifelse(options$size != "normalsize", paste0("\n \\", options$size,"\n\n", x, "\n\n \\normalsize"), x)
 })
-
 ```
-
 \begin{center}
 \Huge{PPOL 670 | Assignment 4}
 
@@ -43,7 +44,6 @@ library(maps) # to get US states lat and long coordinates
 library(tidycensus) # to get fips codes of US states
 library(urbnthemes)
 ```
-
 ## Data Description
 
 We use a publicly available dataset that comes from the 41st week of the Census Bureau’s new Household Pulse Survey (HPS). The survey is meant to rapidly capture the effects of COVID-19 pandemic on Americans’ income, employment, food and housing security, disruptions to education, physical and mental well-being, and health insurance and access to care. The survey was conducted between December 29, 2021 – January 10, 2022.
@@ -94,7 +94,6 @@ pulse41_svy <- pulse41_joined %>%
     type = "BRR",
     mse = TRUE
   )
-  
 ```
 
 ```{r}
@@ -236,3 +235,74 @@ house_ownership_svy_map %>%
 ### Interpretation
 
 Homeownership rates, or the percentage of homes occupied by their owners, ranged from approximately 33 percent in the District of Columbia, followed by 47 percent in New York to 67 percent in Minnesota. All in all, homeownership was lower in more urbanized and denser states (California, New York, Florida), as people living in cities are more likely to rent their homes. Another reason that these states have lower homeownership rates could be due to the rising housing prices and higher mortgage rates in these states.  
+
+<br/>
+
+## Vaccination Plans in the United States 
+
+```{r vaccination plans, ECHO = TRUE}
+svy_all %>%
+  filter(GETVACRV != -99 & GETVACRV != -88) %>%
+  mutate(VaccinationPlan = case_when(GETVACRV == 1 ~ "Definitely get a vaccine",
+                                     GETVACRV == 2 ~ "Probably get a vaccine",
+                                     GETVACRV == 3 ~ "Be unsure about getting a vaccine",
+                                     GETVACRV == 4 ~ "Probably NOT get a vaccine",
+                                     GETVACRV == 5 ~ "Definitely NOT get a vaccine")) %>%
+  group_by(VaccinationPlan) %>%
+  summarize(prop_respondents = survey_prop()) %>%
+  ggplot(aes(x = "", y = prop_respondents, fill = VaccinationPlan)) +
+  geom_bar(width = 1,  stat = "identity", color = "white") +
+  coord_polar("y", start = 0) +
+  geom_text(aes(label =  paste0(round(100 * prop_respondents, 0), "%")), 
+            position = position_stack(vjust = 0.5), size = 3) +
+  theme_void() +
+  scale_fill_brewer(palette = "Blues") +
+  labs(title = "Vaccination Plans", subtitle = "United States", caption = 
+         "Source: U.S. Census Bureau, Household Pulse Survey Week 41 of 2022") +
+  guides(fill=guide_legend(title="Vaccination Plans"))
+```
+
+### Interpretation
+
+Over 200 million Americans have been vaccinated since the FDA authorized the 
+first Covid-19 vaccines. While these vaccines are highly effective at preventing
+hospitalization and death, vaccine hesitancy in the United States remains high.
+Data from the latest Household Pulse Survey finds that approximately 48% of 
+unvaccinated Americans do not plan to get vaccinated. Less than 7% of
+unvaccinated Americans plan to get vaccinated, creating new public health
+challenges as we enter the third year of the pandemic. 
+
+## Vaccine Doses by Region
+
+```{r vaccine doses by region, ECHO = TRUE}
+svy_all %>%
+  filter(NUMDOSES != -99 & NUMDOSES != -88) %>%
+  mutate(Region = case_when(REGION == 1 ~ "Northeast",
+                            REGION == 2 ~ "South",
+                            REGION == 3 ~ "Midwest",
+                            REGION == 4 ~ "West")) %>%
+  group_by(Region, NUMDOSES) %>%
+  summarize(prop_respondents = survey_prop()) %>%
+  ggplot(mapping = aes(x = Region, y = prop_respondents, 
+                       fill = factor(NUMDOSES)), color = "grey") + 
+  geom_col() +
+  geom_text(aes(label =  paste0(round(100 * prop_respondents, 0), "%")), 
+            position = position_stack(vjust = 0.5)) +
+  scale_y_continuous(labels=scales::percent) +
+  scale_fill_brewer(palette = "Blues") +
+  theme_minimal() +
+  labs(title = "Total Vaccine Doses", subtitle = "Data by Region",caption = 
+         "Source: U.S. Census Bureau, Household Pulse Survey Week 41 of 2022", y = "Percentage of Respondents", x =
+         "Region") +
+  guides(fill=guide_legend(title="Number of Doses")) 
+```
+
+### Interpretation
+
+While vaccine hesitancy continues to be a problem, millions of Americans have
+received one or more Covid-19 vaccine doses across all four regions. Over 50%
+of Americans in the Midwest, Northeast and West have received three Covid-19 
+vaccine doses; 47% of Americans in the South have received three doses. Less
+than 1% of the population has received four or more vaccine doses. Overall,
+the latest household pulse data does not show significant regional differences 
+in the number of doses.
