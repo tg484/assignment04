@@ -1,10 +1,7 @@
 ---
-title: "index"
-author: "Payal Soneja and Tanya Grover"
-date: "2/17/2022"
-output: html_document
 title: "Data Science for Public Policy - Assignment 04"
 author: "Payal Soneja and Tanya Grover"
+date: "2/17/2022"
 output:
   html_document: 
     df_print: paged
@@ -238,16 +235,16 @@ Homeownership rates, or the percentage of homes occupied by their owners, ranged
 
 <br/>
 
-## Vaccination Plans in the United States 
+### Data Visualization #3: Vaccination Plans in the United States 
 
 ```{r vaccination plans, ECHO = TRUE}
-svy_all %>%
-  filter(GETVACRV != -99 & GETVACRV != -88) %>%
-  mutate(VaccinationPlan = case_when(GETVACRV == 1 ~ "Definitely get a vaccine",
-                                     GETVACRV == 2 ~ "Probably get a vaccine",
-                                     GETVACRV == 3 ~ "Be unsure about getting a vaccine",
-                                     GETVACRV == 4 ~ "Probably NOT get a vaccine",
-                                     GETVACRV == 5 ~ "Definitely NOT get a vaccine")) %>%
+pulse41_svy %>%
+  filter(getvacrv != -99 & getvacrv != -88) %>%
+  mutate(VaccinationPlan = case_when(getvacrv == 1 ~ "Definitely get a vaccine",
+                                     getvacrv == 2 ~ "Probably get a vaccine",
+                                     getvacrv == 3 ~ "Be unsure about getting a vaccine",
+                                     getvacrv == 4 ~ "Probably NOT get a vaccine",
+                                     getvacrv == 5 ~ "Definitely NOT get a vaccine")) %>%
   group_by(VaccinationPlan) %>%
   summarize(prop_respondents = survey_prop()) %>%
   ggplot(aes(x = "", y = prop_respondents, fill = VaccinationPlan)) +
@@ -275,16 +272,16 @@ challenges as we enter the third year of the pandemic.
 ## Vaccine Doses by Region
 
 ```{r vaccine doses by region, ECHO = TRUE}
-svy_all %>%
-  filter(NUMDOSES != -99 & NUMDOSES != -88) %>%
-  mutate(Region = case_when(REGION == 1 ~ "Northeast",
-                            REGION == 2 ~ "South",
-                            REGION == 3 ~ "Midwest",
-                            REGION == 4 ~ "West")) %>%
-  group_by(Region, NUMDOSES) %>%
+pulse41_svy %>%
+  filter(numdoses != -99 & numdoses != -88 & numdoses != 5 & numdoses != 4) %>%
+  mutate(Region = case_when(region == 1 ~ "Northeast",
+                            region == 2 ~ "South",
+                            region == 3 ~ "Midwest",
+                            region == 4 ~ "West")) %>%
+  group_by(region, numdoses) %>%
   summarize(prop_respondents = survey_prop()) %>%
-  ggplot(mapping = aes(x = Region, y = prop_respondents, 
-                       fill = factor(NUMDOSES)), color = "grey") + 
+  ggplot(mapping = aes(x = region, y = prop_respondents, 
+                       fill = factor(numdoses)), color = "grey") + 
   geom_col() +
   geom_text(aes(label =  paste0(round(100 * prop_respondents, 0), "%")), 
             position = position_stack(vjust = 0.5)) +
