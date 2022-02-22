@@ -57,11 +57,11 @@ base_url <- "https://www2.census.gov/programs-surveys/demo/datasets/hhp/"
 week41_url <- "2022/wk41/HPS_Week41_PUF_CSV.zip"
 pulse_url <- paste0(base_url, week41_url)
 
-#download.file(
-  #pulse_url,
-  #destfile = "data/pulse41.zip",
-  #mode = "wb"
-#)
+download.file(
+  pulse_url,
+  destfile = "data/pulse41.zip",
+  mode = "wb"
+)
 
 unzip(
   zipfile = "data/pulse41.zip",
