@@ -29,7 +29,7 @@ knitr::knit_hooks$set(chunk = function(x, options) {
 \vspace{0.1in}
 
 ```{r}
-#install the following packages and load the libraries
+#Set Up: Install the following packages and load the libraries
 
 #install.packages("remotes")
 #remotes::install_github("UrbanInstitute/urbnthemes", build_vignettes = TRUE)
@@ -93,10 +93,10 @@ pulse41_svy <- pulse41_joined %>%
   )
 ```
 
-```{r}
+```{r, results = "hide"}
 # Check the class of both data types
 class(pulse41)  # data.frame
-class(pulse41_svy) #svyrep.design
+class(pulse41_svy) # svyrep.design
 ```
 
 ## Data Preparation for Visualizations

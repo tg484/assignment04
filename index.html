@@ -197,7 +197,7 @@ summary {
 </div>
 
 
-<pre class="r"><code>#install the following packages and load the libraries
+<pre class="r"><code>#Set Up: Install the following packages and load the libraries
 
 #install.packages(&quot;remotes&quot;)
 #remotes::install_github(&quot;UrbanInstitute/urbnthemes&quot;, build_vignettes = TRUE)
@@ -250,10 +250,8 @@ pulse41_svy &lt;- pulse41_joined %&gt;%
     mse = TRUE
   )</code></pre>
 <pre class="r"><code># Check the class of both data types
-class(pulse41)  # data.frame</code></pre>
-<pre><code>## [1] &quot;spec_tbl_df&quot; &quot;tbl_df&quot;      &quot;tbl&quot;         &quot;data.frame&quot;</code></pre>
-<pre class="r"><code>class(pulse41_svy) #svyrep.design</code></pre>
-<pre><code>## [1] &quot;tbl_svy&quot;       &quot;svyrep.design&quot;</code></pre>
+class(pulse41)  # data.frame
+class(pulse41_svy) # svyrep.design</code></pre>
 </div>
 <div id="data-preparation-for-visualizations" class="section level2">
 <h2>Data Preparation for Visualizations</h2>
